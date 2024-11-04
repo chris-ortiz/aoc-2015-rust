@@ -73,10 +73,12 @@ pub fn q7() {
 
     let keys: Vec<_> = wires.keys().cloned().collect();
 
+    // compute wires
     for key in keys {
         let wire = wires.get(key).unwrap();
         let mut wire_borrow = wire.borrow_mut();
         let _ = wire_borrow.compute_signal(&wires);
-        println!("{:?}", wire_borrow);
     }
+
+    println!("wire a has signal {:?}", wires.get("a"))
 }
