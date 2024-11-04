@@ -1,7 +1,7 @@
-use crate::q6::q6;
+use crate::q7::q7;
 
-mod q6;
+mod q7;
 
 fn main() {
-    q6()
+    q7()
 }
