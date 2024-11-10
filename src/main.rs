@@ -1,9 +1,20 @@
-use crate::q9::q9;
+use crate::q12::q12;
 
+mod q1;
+mod q2;
+mod q3;
+mod q4;
+mod q5;
+mod q6;
+mod q7;
+mod q8;
 mod q9;
+mod q10;
+mod q11;
+mod q12;
 
 fn main() {
-     q9();
+    q12();
 }
 
 // trying out permutation algo
