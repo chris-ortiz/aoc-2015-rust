@@ -1,6 +1,6 @@
+use crate::q14::Status::RUNNING;
 use itertools::Itertools;
 use Status::RESTING;
-use crate::q14::Status::RUNNING;
 
 pub fn q14() {
     let str = "Dancer can fly 27 km/s for 5 seconds, but then must rest for 132 seconds.
@@ -14,18 +14,25 @@ Comet can fly 18 km/s for 6 seconds, but then must rest for 103 seconds.
 Vixen can fly 18 km/s for 5 seconds, but then must rest for 84 seconds.";
 
     let input_time = 2503;
-    let mut times: Vec<_> = Vec::new();
 
+    let mut reindeers: Vec<Reindeer> = Vec::new();
     for line in str.lines() {
         let split: Vec<&str> = line.split(" ").into_iter().collect();
-        let time = calc(input_time, usize::from_str_radix(split[3], 10).unwrap(),
-                        usize::from_str_radix(split[6], 10).unwrap(),
-                        usize::from_str_radix(split[13], 10).unwrap());
-        println!("{}", time);
-        times.push(time)
+        let reindeer = Reindeer::new(usize::from_str_radix(split[3], 10).unwrap(),
+                                     usize::from_str_radix(split[6], 10).unwrap(),
+                                     usize::from_str_radix(split[13], 10).unwrap());
+        reindeers.push(reindeer)
     }
 
-    print!("max {:?}", times.iter().max())
+
+    for i in 0..input_time {
+        reindeers.iter_mut().for_each(|r| r.tick());
+        let mut current_lead = reindeers.iter_mut()
+            .max_set_by(|x, y| x.traveled.cmp(&y.traveled));
+        current_lead.iter_mut().for_each(|mut r| r.points += 1)
+    }
+
+    println!("{:?}", reindeers.iter().max_by(|x, y| x.points.cmp(&y.points)).unwrap().points)
 }
 
 fn calc(total_time: usize, kmps: usize, endurance_time: usize, rest_time: usize) -> usize {
@@ -62,6 +69,59 @@ fn calc(total_time: usize, kmps: usize, endurance_time: usize, rest_time: usize)
     traveled
 }
 
+#[derive(Debug)]
+struct Reindeer {
+    status: Status,
+    kmps: usize,
+    endurance_time: usize,
+    rest_time: usize,
+
+    traveled: usize,
+    seconds_without_rest: usize,
+    current_rest_time: usize,
+    points: usize,
+}
+
+impl Reindeer {
+    fn new(kmps: usize, endurance_time: usize, rest_time: usize) -> Self {
+        Self {
+            status: RUNNING,
+            kmps,
+            endurance_time,
+            rest_time,
+            traveled: 0,
+            seconds_without_rest: 0,
+            current_rest_time: 0,
+            points: 0,
+        }
+    }
+    fn tick(&mut self) {
+        match self.status {
+            RUNNING => {
+                if self.seconds_without_rest < self.endurance_time {
+                    self.traveled += self.kmps;
+                    self.seconds_without_rest += 1
+                } else {
+                    self.status = RESTING;
+                    self.seconds_without_rest = 0;
+                    self.current_rest_time += 1
+                }
+            }
+            RESTING => {
+                if self.current_rest_time < self.rest_time {
+                    self.current_rest_time += 1;
+                } else {
+                    self.status = RUNNING;
+                    self.current_rest_time = 0;
+                    self.seconds_without_rest += 1;
+                    self.traveled += self.kmps;
+                }
+            }
+        }
+    }
+}
+
+#[derive(Debug)]
 enum Status {
     RESTING,
     RUNNING,
