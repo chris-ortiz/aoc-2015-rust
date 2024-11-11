@@ -1,11 +1,17 @@
+use std::collections::btree_map::OccupiedEntry;
+use std::collections::hash_map::Entry;
 use std::collections::HashMap;
 use std::fs;
+use std::hash::Hash;
 use std::path::Path;
 use itertools::Itertools;
 use crate::q13::HappinessType::{GAIN, LOSE};
 
 pub fn q13() {
-    let family = build_graph();
+    let mut family = build_graph();
+
+    insert_me(&mut family);
+
 
     let permutations = family.keys().permutations(family.len());
     let mut sums: Vec<_> = Vec::new();
@@ -13,10 +19,10 @@ pub fn q13() {
     for perm in permutations {
         let mut sum: i32 = 0;
 
-        for i in 0..8 {
+        for i in 0..family.keys().len() {
             let person = family.get(perm[i]).unwrap();
 
-            let neighbour = if i < 7 {
+            let neighbour = if i < family.keys().len() - 1 {
                 perm[i + 1]
             } else {
                 perm[0]
@@ -29,6 +35,28 @@ pub fn q13() {
     }
 
     println!("{:?}", sums.iter().max());
+}
+
+fn insert_me(family: &mut HashMap<String, Person>) {
+    let my_neighbours: HashMap<String, Happiness> = family.keys().map(|s|
+        {
+            let happiness = Happiness {
+                amount: 0,
+                h_type: GAIN,
+            };
+            (String::from(s), happiness)
+        }
+    ).collect();
+
+    let me_name = String::from("Me");
+    family.insert(me_name.clone(), Person {
+        name: me_name,
+        neighbours: my_neighbours,
+    });
+
+    for (_, person) in family {
+        person.neighbours.insert(String::from("Me"), Happiness { amount: 0, h_type: GAIN });
+    }
 }
 
 fn add(sum: &mut i32, happiness: &Happiness) {
